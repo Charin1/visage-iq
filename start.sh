@@ -23,21 +23,7 @@ echo "🧹 Clearing existing processes on ports 8000 & 5173..."
 lsof -ti:8000 | xargs kill -9 2>/dev/null || true
 lsof -ti:5173 | xargs kill -9 2>/dev/null || true
 
-# Cleanup function to kill background processes on exit
-cleanup() {
-    echo ""
-    echo "🛑 Shutting down Visage IQ services..."
-    if [ -n "$BACKEND_PID" ]; then
-        kill "$BACKEND_PID" 2>/dev/null
-    fi
-    if [ -n "$FRONTEND_PID" ]; then
-        kill "$FRONTEND_PID" 2>/dev/null
-    fi
-    echo "✅ All services stopped."
-    exit 0
-}
-
-trap cleanup SIGINT SIGTERM EXIT
+# Background servers remain active on ports 8000 and 5173
 
 # --- 1. Start Python Backend ---
 echo ""

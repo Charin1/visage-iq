@@ -258,25 +258,6 @@ export default function ImageUploader({ onImageSelected, onRunDemo, isLoading })
         </div>
       )}
 
-      <div style={{
-        marginTop: '1.5rem',
-        paddingTop: '1.25rem',
-        borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-        display: 'flex',
-        alignItems: 'center',
-        justify: 'space-between'
-      }}>
-        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Don't have an image ready?</span>
-        <button
-          className="btn-secondary"
-          onClick={onRunDemo}
-          disabled={isLoading}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-        >
-          <Sparkles size={14} color="var(--accent-cyan)" />
-          Run Synthetic Demo
-        </button>
-      </div>
     </div>
   );
 }

@@ -28,6 +28,33 @@ app.add_middleware(
 
 pipeline = VisageIQPipeline()
 
+from pydantic import BaseModel
+from typing import List, Dict, Optional, Any
+from app.agent import VisageStyleAgent
+
+style_agent = VisageStyleAgent()
+
+class ChatRequest(BaseModel):
+    session_id: str = "default_session"
+    message: str
+    facial_metrics: Optional[Dict[str, Any]] = None
+    qualitative_profile: Optional[Dict[str, Any]] = None
+    history: Optional[List[Dict[str, Any]]] = None
+
+@app.post("/api/chat")
+async def chat_with_style_agent(req: ChatRequest):
+    try:
+        res = style_agent.run_chat_turn(
+            session_id=req.session_id,
+            user_message=req.message,
+            facial_metrics=req.facial_metrics,
+            qualitative_profile=req.qualitative_profile,
+            history=req.history
+        )
+        return JSONResponse(content=res)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Agent chat error: {str(e)}")
+
 @app.get("/")
 @app.get("/api/health")
 def health_check():

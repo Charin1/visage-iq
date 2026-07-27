@@ -9,15 +9,25 @@ class OllamaVisionAnalyzer:
     def __init__(self, model_name: str = None):
         self.model_name = model_name or os.getenv("OLLAMA_MODEL", "qwen2.5vl:7b")
 
-    def analyze_face_image(self, image_bytes: bytes, quantitative_data: dict) -> dict:
+    def analyze_face_image(self, image_bytes: bytes, quantitative_data: dict, max_retries: int = 3) -> dict:
+        import time
         with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
             tmp_file.write(image_bytes)
             tmp_path = tmp_file.name
 
         try:
-            return self._run_ollama_query(tmp_path, quantitative_data)
+            for attempt in range(1, max_retries + 1):
+                try:
+                    return self._run_ollama_query(tmp_path, quantitative_data)
+                except Exception as attempt_err:
+                    if attempt < max_retries:
+                        backoff = attempt * 1.5
+                        logger.warning(f"⚠️ Ollama attempt {attempt}/{max_retries} failed ({attempt_err}). Retrying in {backoff}s...")
+                        time.sleep(backoff)
+                    else:
+                        raise attempt_err
         except Exception as e:
-            logger.warning(f"⚠️ Ollama invocation failed ({e}). Returning fallback qualitative analysis.")
+            logger.warning(f"⚠️ All {max_retries} Ollama retry attempts failed ({e}). Returning fallback qualitative analysis.")
             return self._generate_fallback_analysis(quantitative_data)
         finally:
             if os.path.exists(tmp_path):
@@ -66,11 +76,11 @@ class OllamaVisionAnalyzer:
         clean_quant_data = {k: v for k, v in quantitative_data.items() if k != "hud_mesh_points"}
 
         prompt = f"""
-        Analyze the person in this image for physical structure, domain presentation, and physical traits.
+        Perform an in-depth physical, vocal, athletic, personality, and biological analysis of the person in this photo.
         
-        Provided Facial Measurement Context: {json.dumps(clean_quant_data)}
+        Provided Quantitative Measurement Context: {json.dumps(clean_quant_data)}
 
-        Output ONLY a valid JSON object with the exact keys below, no extra commentary or markdown:
+        Output ONLY a valid JSON object with the exact keys below, no commentary or markdown code fences:
         {{
           "attractiveness_and_harmony": {{
             "facial_symmetry_rating": "High / Moderate / Asymmetric",
@@ -81,6 +91,24 @@ class OllamaVisionAnalyzer:
             "primary_domain": "One of: [Athlete / Sports, Scholar / Tech / Academic, Singer / Performing Arts, Executive / Corporate, Creative / Artist]",
             "confidence_level": "High / Medium / Low",
             "lifestyle_and_visual_cues": ["Specific indicators (e.g., neck/trapezius build, posture, grooming style, lighting environment)"]
+          }},
+          "vocal_and_speech_profile": {{
+            "vocal_resonance_potential": "High / Medium / Standard",
+            "vocal_projection_cues": ["Specific traits like jaw breadth, hyoid posture, orbicularis muscle tone"]
+          }},
+          "athletic_and_somatotype_profile": {{
+            "athletic_conditioning_type": "Explosive / Power / Endurance / Structural Alignment",
+            "muscularity_and_neck_cues": ["Trapezius conditioning, sternocleidomastoid ratio, facial muscle density"]
+          }},
+          "personality_traits_big_five": {{
+            "conscientiousness_score": "High / Moderate",
+            "extraversion_score": "High / Ambivert / Introvert",
+            "openness_to_experience": "High / Moderate",
+            "key_behavioral_signals": ["Facial muscle composure, brow alignment, eye contact posture"]
+          }},
+          "vitality_and_biological_age": {{
+            "perceived_biological_age_gap": "Younger than calendar age / Age-matched / Experienced",
+            "skin_vitality_and_energy_index": "Vibrant / Balanced / Rested"
           }},
           "presence_and_authority_markers": {{
             "perceived_dominance": "High / Medium / Subtle",
@@ -137,6 +165,33 @@ class OllamaVisionAnalyzer:
                     "Balanced facial muscle tension",
                     "Neutral background and professional posture"
                 ]
+            },
+            "vocal_and_speech_profile": {
+                "vocal_resonance_potential": "High" if fwhr >= 1.85 else "Medium",
+                "vocal_projection_cues": [
+                    "Strong mandibular volume for vocal resonance",
+                    "Even orbicularis tone and articulatory spacing"
+                ]
+            },
+            "athletic_and_somatotype_profile": {
+                "athletic_conditioning_type": "Explosive / Power" if fwhr >= 1.85 else "Endurance / Structural Alignment",
+                "muscularity_and_neck_cues": [
+                    "Proportionate neck-to-jaw ratio",
+                    "Symmetrical masseter muscle density"
+                ]
+            },
+            "personality_traits_big_five": {
+                "conscientiousness_score": "High" if symmetry >= 90 else "Moderate",
+                "extraversion_score": "High" if fwhr >= 1.85 else "Ambivert",
+                "openness_to_experience": "High",
+                "key_behavioral_signals": [
+                    "Calm, focused gaze with neutral facial tension",
+                    "Symmetrical eyebrow posture"
+                ]
+            },
+            "vitality_and_biological_age": {
+                "perceived_biological_age_gap": "Younger than calendar age",
+                "skin_vitality_and_energy_index": "Vibrant"
             },
             "presence_and_authority_markers": {
                 "perceived_dominance": dominance,

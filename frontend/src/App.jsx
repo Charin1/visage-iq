@@ -13,6 +13,9 @@ export default function App() {
   const [analysisResults, setAnalysisResults] = useState(null);
   const [error, setError] = useState(null);
   const [showHUDMesh, setShowHUDMesh] = useState(true);
+  const [activeOverlay, setActiveOverlay] = useState(null);
+  const [savedOverlay, setSavedOverlay] = useState(null);
+  const [isViewingOriginal, setIsViewingOriginal] = useState(false);
 
   const handleImageSelected = async (file, previewUrl) => {
     setSelectedFile(file);
@@ -45,25 +48,19 @@ export default function App() {
     }
   };
 
-  const handleRunDemo = async () => {
-    setIsLoading(true);
-    setError(null);
-    setAnalysisResults(null);
+  const handleUpdateOverlay = (newOverlay) => {
+    setActiveOverlay(newOverlay);
+    setSavedOverlay(newOverlay);
+    setIsViewingOriginal(false);
+  };
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/demo`);
-      if (!response.ok) {
-        throw new Error('Failed to execute demo analysis');
-      }
-      const data = await response.json();
-      setAnalysisResults(data);
-      // Generate synthetic face preview for display
-      setImagePreview('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="%231E1914"/><ellipse cx="300" cy="300" rx="140" ry="190" fill="%23D2B4A0"/><circle cx="240" cy="260" r="22" fill="%23FFFFFF"/><circle cx="360" cy="260" r="22" fill="%23FFFFFF"/><circle cx="240" cy="260" r="10" fill="%23503214"/><circle cx="360" cy="260" r="10" fill="%23503214"/><line x1="300" y1="280" x2="300" y2="330" stroke="%23A07864" stroke-width="4"/><ellipse cx="300" cy="380" rx="60" ry="25" fill="%238C3C50"/></svg>');
-    } catch (err) {
-      console.error("Demo error:", err);
-      setError(`Demo Execution Error: ${err.message}. Make sure python backend is running.`);
-    } finally {
-      setIsLoading(false);
+  const handleToggleOriginal = () => {
+    if (isViewingOriginal) {
+      setActiveOverlay(savedOverlay);
+      setIsViewingOriginal(false);
+    } else {
+      setActiveOverlay(null);
+      setIsViewingOriginal(true);
     }
   };
 
@@ -72,6 +69,9 @@ export default function App() {
     setSelectedFile(null);
     setAnalysisResults(null);
     setError(null);
+    setActiveOverlay(null);
+    setSavedOverlay(null);
+    setIsViewingOriginal(false);
   };
 
   return (
@@ -115,9 +115,6 @@ export default function App() {
             justify: 'space-between'
           }}>
             <span>⚠️ {error}</span>
-            <button className="btn-secondary" onClick={handleRunDemo} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
-              Try Synthetic Demo
-            </button>
           </div>
         )}
 
@@ -125,7 +122,6 @@ export default function App() {
           <div style={{ maxWidth: '650px', margin: '0 auto' }}>
             <ImageUploader
               onImageSelected={handleImageSelected}
-              onRunDemo={handleRunDemo}
               isLoading={isLoading}
             />
           </div>
@@ -135,20 +131,35 @@ export default function App() {
             <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ fontSize: '1.1rem' }}>Facial Mesh HUD</h3>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  {savedOverlay && (
+                    <button
+                      className="btn-secondary"
+                      onClick={handleToggleOriginal}
+                      style={{
+                        padding: '0.35rem 0.65rem',
+                        fontSize: '0.75rem',
+                        color: isViewingOriginal ? '#FFF' : 'var(--accent-amber)',
+                        background: isViewingOriginal ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                        borderColor: 'rgba(245, 158, 11, 0.5)'
+                      }}
+                    >
+                      {isViewingOriginal ? '✨ Re-apply Try-On' : '📷 View Original'}
+                    </button>
+                  )}
                   <button
                     className="btn-secondary"
                     onClick={() => setShowHUDMesh(!showHUDMesh)}
-                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
+                    style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
                   >
-                    {showHUDMesh ? 'Hide Mesh Points' : 'Show Mesh Points'}
+                    {showHUDMesh ? 'Hide Mesh' : 'Show Mesh'}
                   </button>
                   <button
                     className="btn-secondary"
                     onClick={handleReset}
-                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                    style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                   >
-                    <RefreshCw size={12} /> Reset
+                    <RefreshCw size={11} /> New Photo
                   </button>
                 </div>
               </div>
@@ -157,6 +168,7 @@ export default function App() {
                 imageSrc={imagePreview}
                 meshPoints={analysisResults?.quantitative_metrics?.hud_mesh_points}
                 showMesh={showHUDMesh}
+                activeOverlay={activeOverlay}
               />
 
               {isLoading && (
@@ -181,7 +193,7 @@ export default function App() {
             {/* Right Column: Analysis Dashboard */}
             <div>
               {analysisResults ? (
-                <AnalysisDashboard results={analysisResults} />
+                <AnalysisDashboard results={analysisResults} onUpdateOverlay={handleUpdateOverlay} />
               ) : (
                 <div className="glass-panel" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
                   <Loader2 className="animate-spin" size={36} color="var(--accent-purple)" style={{ margin: '0 auto 1rem' }} />
