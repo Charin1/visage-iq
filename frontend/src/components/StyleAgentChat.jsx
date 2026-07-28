@@ -3,7 +3,7 @@ import { Send, Bot, User, Sparkles, Loader2 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
-export default function StyleAgentChat({ quantitative_metrics, qualitative_analysis, onUpdateOverlay }) {
+export default function StyleAgentChat({ quantitative_metrics, qualitative_analysis }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -50,11 +50,8 @@ export default function StyleAgentChat({ quantitative_metrics, qualitative_analy
       const data = await response.json();
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: data.latest_reply, overlay: data.visual_overlay }
+        { role: 'assistant', content: data.latest_reply }
       ]);
-      if (data.visual_overlay && onUpdateOverlay) {
-        onUpdateOverlay(data.visual_overlay);
-      }
     } catch (err) {
       console.error('Style agent chat error:', err);
       setMessages((prev) => [

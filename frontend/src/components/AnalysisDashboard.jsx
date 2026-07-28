@@ -330,7 +330,6 @@ export default function AnalysisDashboard({ results, imagePreview }) {
         <StyleAgentChat
           quantitative_metrics={quant}
           qualitative_analysis={qual}
-          onUpdateOverlay={onUpdateOverlay}
         />
       )}
 
