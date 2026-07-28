@@ -53,18 +53,21 @@ class VisageStyleAgent:
         last_msg = messages[-1]["content"].lower() if messages else ""
 
         overlay_config = {
-            "show_glasses": any(w in last_msg for w in ["glass", "frame", "aviator", "shade", "spectacle", "try-on", "try on"]),
+            "show_glasses": any(w in last_msg for w in ["glass", "frame", "aviator", "shade", "spectacle", "visor", "wayfarer", "try-on", "try on"]),
             "show_haircut": any(w in last_msg for w in ["hair", "cut", "crop", "buzz", "fade", "pompadour"]),
-            "show_beard": any(w in last_msg for w in ["beard", "stubble", "mustache", "grooming"]),
-            "glasses_style": "aviator" if "aviator" in last_msg else ("round" if "round" in last_msg or fwhr >= 1.85 else "square"),
-            "haircut_style": "buzz" if "buzz" in last_msg else ("crop" if "crop" in last_msg or fwhr >= 1.85 else "fade"),
-            "beard_style": "stubble" if "stubble" in last_msg or jaw_ratio >= 0.80 else "full"
+            "show_beard": any(w in last_msg for w in ["beard", "stubble", "mustache", "goatee", "grooming"]),
+            "show_hat": any(w in last_msg for w in ["hat", "fedora", "cap", "snapback", "beanie"]),
+            "glasses_style": "cyber_visor" if "visor" in last_msg else ("aviator" if "aviator" in last_msg else ("round" if "round" in last_msg or fwhr >= 1.85 else "wayfarer")),
+            "haircut_style": "crop" if "crop" in last_msg else "crop",
+            "hat_style": "cap" if ("cap" in last_msg or "snapback" in last_msg) else ("beanie" if "beanie" in last_msg else "fedora"),
+            "beard_style": "goatee" if "goatee" in last_msg else ("stubble" if "stubble" in last_msg or jaw_ratio >= 0.80 else "full")
         }
 
         # Default to full try-on preview if user explicitly asks to try-on
         if "try-on" in last_msg or "try on" in last_msg or "show me" in last_msg or "preview" in last_msg:
             overlay_config["show_glasses"] = True
-            overlay_config["show_haircut"] = True
+            overlay_config["show_beard"] = True
+            overlay_config["show_hat"] = True
 
         state["visual_overlay"] = overlay_config
         logger.info(f"[LangGraph Node: StyleRules] Applied rules & visual overlay config: {overlay_config}")

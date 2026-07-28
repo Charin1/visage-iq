@@ -13,9 +13,6 @@ export default function App() {
   const [analysisResults, setAnalysisResults] = useState(null);
   const [error, setError] = useState(null);
   const [showHUDMesh, setShowHUDMesh] = useState(true);
-  const [activeOverlay, setActiveOverlay] = useState(null);
-  const [savedOverlay, setSavedOverlay] = useState(null);
-  const [isViewingOriginal, setIsViewingOriginal] = useState(false);
 
   const handleImageSelected = async (file, previewUrl) => {
     setSelectedFile(file);
@@ -48,30 +45,11 @@ export default function App() {
     }
   };
 
-  const handleUpdateOverlay = (newOverlay) => {
-    setActiveOverlay(newOverlay);
-    setSavedOverlay(newOverlay);
-    setIsViewingOriginal(false);
-  };
-
-  const handleToggleOriginal = () => {
-    if (isViewingOriginal) {
-      setActiveOverlay(savedOverlay);
-      setIsViewingOriginal(false);
-    } else {
-      setActiveOverlay(null);
-      setIsViewingOriginal(true);
-    }
-  };
-
   const handleReset = () => {
     setImagePreview(null);
     setSelectedFile(null);
     setAnalysisResults(null);
     setError(null);
-    setActiveOverlay(null);
-    setSavedOverlay(null);
-    setIsViewingOriginal(false);
   };
 
   return (
@@ -112,7 +90,7 @@ export default function App() {
             fontSize: '0.9rem',
             display: 'flex',
             alignItems: 'center',
-            justify: 'space-between'
+            justifyContent: 'space-between'
           }}>
             <span>⚠️ {error}</span>
           </div>
@@ -130,23 +108,8 @@ export default function App() {
             {/* Left Column: Image Preview & Canvas HUD */}
             <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontSize: '1.1rem' }}>Facial Mesh HUD</h3>
+                <h3 style={{ fontSize: '1.1rem' }}>3D Facial Mesh HUD</h3>
                 <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                  {savedOverlay && (
-                    <button
-                      className="btn-secondary"
-                      onClick={handleToggleOriginal}
-                      style={{
-                        padding: '0.35rem 0.65rem',
-                        fontSize: '0.75rem',
-                        color: isViewingOriginal ? '#FFF' : 'var(--accent-amber)',
-                        background: isViewingOriginal ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255, 255, 255, 0.08)',
-                        borderColor: 'rgba(245, 158, 11, 0.5)'
-                      }}
-                    >
-                      {isViewingOriginal ? '✨ Re-apply Try-On' : '📷 View Original'}
-                    </button>
-                  )}
                   <button
                     className="btn-secondary"
                     onClick={() => setShowHUDMesh(!showHUDMesh)}
@@ -168,7 +131,6 @@ export default function App() {
                 imageSrc={imagePreview}
                 meshPoints={analysisResults?.quantitative_metrics?.hud_mesh_points}
                 showMesh={showHUDMesh}
-                activeOverlay={activeOverlay}
               />
 
               {isLoading && (
@@ -193,7 +155,7 @@ export default function App() {
             {/* Right Column: Analysis Dashboard */}
             <div>
               {analysisResults ? (
-                <AnalysisDashboard results={analysisResults} onUpdateOverlay={handleUpdateOverlay} />
+                <AnalysisDashboard results={analysisResults} imagePreview={imagePreview} />
               ) : (
                 <div className="glass-panel" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
                   <Loader2 className="animate-spin" size={36} color="var(--accent-purple)" style={{ margin: '0 auto 1rem' }} />

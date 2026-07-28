@@ -1,7 +1,7 @@
 import io
 import cv2
 import numpy as np
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.pipeline import VisageIQPipeline
@@ -31,7 +31,6 @@ pipeline = VisageIQPipeline()
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Any
 from app.agent import VisageStyleAgent
-
 style_agent = VisageStyleAgent()
 
 class ChatRequest(BaseModel):
@@ -76,6 +75,9 @@ async def analyze_face(file: UploadFile = File(...)):
         return JSONResponse(content=results)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis pipeline error: {str(e)}")
+
+
+
 
 @app.get("/api/demo")
 def run_demo_analysis():

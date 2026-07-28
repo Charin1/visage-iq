@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import { Award, Briefcase, Eye, Music, Dumbbell, Brain, Activity, Download, ChevronRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Award, Briefcase, Eye, Music, Dumbbell, Brain, Activity, Download, ChevronRight, Sparkles, CheckCircle2, Columns } from 'lucide-react';
 import StyleAgentChat from './StyleAgentChat.jsx';
+import GoalSelector from './GoalSelector.jsx';
+import BiometricRadarChart from './BiometricRadarChart.jsx';
+import ActionableBlueprint from './ActionableBlueprint.jsx';
+import PhotoComparer from './PhotoComparer.jsx';
 
-export default function AnalysisDashboard({ results, onUpdateOverlay }) {
+export default function AnalysisDashboard({ results, imagePreview }) {
   const [activeTab, setActiveTab] = useState('overview');
+  const [activeGoal, setActiveGoal] = useState('executive');
 
   if (!results) return null;
 
@@ -20,7 +25,7 @@ export default function AnalysisDashboard({ results, onUpdateOverlay }) {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(results, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `visage_iq_report_${Date.now()}.json`);
+    downloadAnchor.setAttribute("download", `visage_iq_executive_report_${Date.now()}.json`);
     downloadAnchor.click();
   };
 
@@ -51,7 +56,7 @@ export default function AnalysisDashboard({ results, onUpdateOverlay }) {
           </div>
 
           <button className="btn-secondary" onClick={handleDownloadJSON} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Download size={14} /> Export Report
+            <Download size={14} /> Export Executive Dossier
           </button>
         </div>
 
@@ -76,10 +81,14 @@ export default function AnalysisDashboard({ results, onUpdateOverlay }) {
         </div>
       </div>
 
+      {/* Goal Intent Selector */}
+      <GoalSelector activeGoal={activeGoal} onSelectGoal={setActiveGoal} />
+
       {/* Navigation Segmented Tab Bar */}
       <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '0.5rem', overflowX: 'auto' }}>
         {[
-          { id: 'overview', label: 'Overview' },
+          { id: 'overview', label: 'Executive Overview' },
+          { id: 'ab_test', label: 'Headshot A/B Test' },
           { id: 'vocal & athletic', label: 'Vocal & Athletic' },
           { id: 'personality & vitality', label: 'Personality & Vitality' },
           { id: 'ai style coach', label: 'AI Style Coach' },
@@ -106,9 +115,23 @@ export default function AnalysisDashboard({ results, onUpdateOverlay }) {
         ))}
       </div>
 
-      {/* Tab 1: Overview */}
+      {/* Tab 1: Executive Overview */}
       {activeTab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          
+          {/* Grid Layout: Biometric Radar Chart & Actionable AI Blueprint */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+            <BiometricRadarChart
+              quantitative_metrics={quant}
+              qualitative_analysis={qual}
+              beauty_harmony_score={beauty}
+            />
+            <ActionableBlueprint
+              quantitative_metrics={quant}
+              qualitative_analysis={qual}
+              activeGoal={activeGoal}
+            />
+          </div>
           
           {/* Primary Domain Archetype Card */}
           <div className="glass-panel" style={{ padding: '1.5rem' }}>
@@ -295,6 +318,11 @@ export default function AnalysisDashboard({ results, onUpdateOverlay }) {
           </div>
 
         </div>
+      )}
+
+      {/* Tab: Headshot A/B Test */}
+      {activeTab === 'ab_test' && (
+        <PhotoComparer primaryResults={results} primaryImageSrc={imagePreview} />
       )}
 
       {/* Tab 4: AI Style Coach */}

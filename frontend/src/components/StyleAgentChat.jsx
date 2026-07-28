@@ -133,29 +133,6 @@ export default function StyleAgentChat({ quantitative_metrics, qualitative_analy
               }}
             >
               <div>{msg.content}</div>
-              {msg.overlay && (msg.overlay.show_glasses || msg.overlay.show_haircut || msg.overlay.show_beard) && (
-                <div style={{ marginTop: '0.75rem', paddingTop: '0.6rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                  <button
-                    className="btn-secondary"
-                    onClick={() => onUpdateOverlay && onUpdateOverlay(msg.overlay)}
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(245, 158, 11, 0.25))',
-                      border: '1px solid rgba(245, 158, 11, 0.5)',
-                      color: '#FFF',
-                      fontSize: '0.78rem',
-                      padding: '0.4rem 0.8rem',
-                      borderRadius: '8px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <Sparkles size={14} color="var(--accent-amber)" />
-                    ✨ Live Try-On Active on Left HUD Canvas
-                  </button>
-                </div>
-              )}
             </div>
 
             {msg.role === 'user' && (
